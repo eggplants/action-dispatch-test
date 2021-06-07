@@ -14,17 +14,17 @@ jobs:
           base_path="https://api.github.com/repos/${GITHUB_REPOSITORY}"
           point_path="/actions/workflows/${TARGET_NAME}/runs"
           echo "RUNS_API_URL=${base_path}${point_path}" >> "$GITHUB_ENV"
-          
+
       - name: Print RUNS_API_URL
         run: echo 'RUNS_API_URL:' "$RUNS_API_URL"
-    
+
       - name: Set previous ${{ env.TARGET_NAME }} run id
         run: |
           curl -s "$RUNS_API_URL" \
           | jq 'if (.workflow_runs|length) == 0
                 then 0 else .workflow_runs[0].id end' \
           | sed 's/^/PREV_RUN_ID=/' >> "$GITHUB_ENV"
-      
+
       - name: Print PREV_RUN_ID
         run: echo 'PREV_RUN_ID:' "${PREV_RUN_ID}"
 
@@ -54,4 +54,4 @@ jobs:
 
       - name: Print results of ${{ env.TARGET_NAME }}
         run: jq '.workflow_runs[0]|
-                 {"id":.id,"status":.status,"conclusion":.conclusion}' _
+          {"id":.id,"status":.status,"conclusion":.conclusion}' _
