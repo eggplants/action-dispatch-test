@@ -1,0 +1,12 @@
+name: Repo dispatch
+
+on:
+  repository_dispatch:
+    types: test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sleep
+        run: sleep 10 && echo 'yay!!!'

@@ -1,0 +1,31 @@
+name: Workflow dispatch
+
+on: workflow_dispatch
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      TARGET_NAME: rep_disp.yml
+
+    steps:
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          event-type: test
+
+      - name: Wait for the end of ${{ env.TARGET_NAME }}
+        run: |
+          wait_flag=true
+          while "$wait_flag"
+          do
+            curl -s \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/test.yml/runs" > _
+            status="$(jq '.workflow_runs[0]|.status' _)"
+            [ "$status" = 'success' ] && wait_flag=false
+            sleep "$[RANDOM%3+3]"
+          done
+
+      - name: Print the conclusion of ${{ env.TARGET_NAME }}
+        run: jq '.workflow_runs[0]|.conclusion' _
