@@ -20,3 +20,17 @@
 <https://github.com/eggplants/action-dispatch-test/actions/runs/915592304>
 
 ![image](https://user-images.githubusercontent.com/42153744/121058407-40094480-c7fb-11eb-8515-a5c1b753a970.png)
+
+## Tips
+
+<https://docs.github.com/en/rest/reference/checks#create-a-check-run>
+
+### `status`
+
+- `queued`, `in_progress`, or `completed`
+
+### conclusion
+
+Note: It provides after status turns into `completed_at` `completed`
+
+- `action_required`, `cancelled`, `failure`, `neutral`, `success`, `skipped`, `stale`, or `timed_out`
