@@ -9,17 +9,25 @@ jobs:
       TARGET_NAME: rep_disp.yml
 
     steps:
-      - name: Get previous ${{ env.TARGET_name }} run id
+      - name: Set endpoint
         run: |
-          curl -s \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/${TARGET_NAME}/runs" \
-              | jq 'if (.workflow_runs|length) == 0
-                    then 0 else .workflow_runs[0].id end' _ \
-              | sed 's/^/PREV_RUN_ID=/' >> "$GITHUB_ENV"
+          base_path="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          point_path="/actions/workflows/${TARGET_NAME}/runs"
+          echo "RUNS_API_URL=${base_path}${point_path}" >> "$GITHUB_ENV"
+          
+      - name: Print RUNS_API_URL
+        run: echo 'RUNS_API_URL:' "$RUNS_API_URL"
+    
+      - name: Set previous ${{ env.TARGET_NAME }} run id
+        run: |
+          curl -s "$RUNS_API_URL" \
+          | jq 'if (.workflow_runs|length) == 0
+                then 0 else .workflow_runs[0].id end' \
+          | sed 's/^/PREV_RUN_ID=/' >> "$GITHUB_ENV"
       
       - name: Print PREV_RUN_ID
-        run: echo "$PREV_RUN_ID" 
-          
+        run: echo 'PREV_RUN_ID:' "${PREV_RUN_ID}"
+
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v1
         with:
@@ -30,9 +38,8 @@ jobs:
         run: |
           while :
           do
-            echo "try:$[i++]"
-            curl -s \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/${TARGET_NAME}/runs" > _
+            echo "Try: $[i++]"
+            curl -s "$RUNS_API_URL" > _
 
             {
               [ "$(jq '.workflow_runs|length' _)" -eq 0 ] \
@@ -40,10 +47,11 @@ jobs:
             } && sleep "$[RANDOM%3+3]" && continue
 
             status="$(jq -r '.workflow_runs[0].status' _)"
-            echo "status: $status"
+            echo "Status: $status"
             [ "$status" = 'completed' ] && break
             sleep "$[RANDOM%3+3]"
           done
 
-      - name: Print the conclusion of ${{ env.TARGET_NAME }}
-        run: jq '.workflow_runs[0]|.conclusion' _
+      - name: Print results of ${{ env.TARGET_NAME }}
+        run: jq '.workflow_runs[0]|
+                 {"id":.id,"status":.status,"conclusion":.conclusion}' _
