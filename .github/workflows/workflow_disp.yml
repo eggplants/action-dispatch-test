@@ -26,7 +26,7 @@ jobs:
           | sed 's/^/PREV_RUN_ID=/' >> "$GITHUB_ENV"
 
       - name: Print PREV_RUN_ID
-        run: echo 'PREV_RUN_ID:' "${PREV_RUN_ID}"
+        run: echo 'PREV_RUN_ID:' "$PREV_RUN_ID"
 
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v1
