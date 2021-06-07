@@ -12,8 +12,8 @@
 
 ## Requirement
 
-- set PAT with `repo` to `Secrets`
-  - see: [peter-evans/repository-dispatch](https://github.com/peter-evans/repository-dispatch#token)
+- Set PAT with `repo` to `Secrets`
+  - See: [peter-evans/repository-dispatch](https://github.com/peter-evans/repository-dispatch#token)
 
 ## Screenshot
 
