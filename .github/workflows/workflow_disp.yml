@@ -9,6 +9,17 @@ jobs:
       TARGET_NAME: rep_disp.yml
 
     steps:
+      - name: Get previous ${{ env.TARGET_name }} run id
+        run: |
+          curl -s \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/${TARGET_NAME}/runs" \
+              | jq 'if (.workflow_runs|length) == 0
+                    then 0 else .workflow_runs[0].id end' _ \
+              | sed 's/^/PREV_RUN_ID=/' >> "$GITHUB_ENV"
+      
+      - name: Print PREV_RUN_ID
+        run: echo "$PREV_RUN_ID" 
+          
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v1
         with:
@@ -17,13 +28,20 @@ jobs:
 
       - name: Wait for the end of ${{ env.TARGET_NAME }}
         run: |
-          wait_flag=true
-          while "$wait_flag"
+          while :
           do
+            echo "try:$[i++]"
             curl -s \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/test.yml/runs" > _
-            status="$(jq '.workflow_runs[0]|.status' _)"
-            [ "$status" = 'success' ] && wait_flag=false
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/${TARGET_NAME}/runs" > _
+
+            {
+              [ "$(jq '.workflow_runs|length' _)" -eq 0 ] \
+              || [ "$(jq '.workflow_runs[0].id' _)" = "$PREV_RUN_ID" ]
+            } && sleep "$[RANDOM%3+3]" && continue
+
+            status="$(jq -r '.workflow_runs[0].status' _)"
+            echo "status: $status"
+            [ "$status" = 'completed' ] && break
             sleep "$[RANDOM%3+3]"
           done
 
